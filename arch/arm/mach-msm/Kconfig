@@ -2506,6 +2506,14 @@ config MSM_PBUS
 	  in debugging PBUS hang issues. This handler reads
 	  client address which caused PBUS hang and PBUS
 	  master information at the time of hang.
+
+config FORCE_FAST_CHARGE
+	bool "Force AC charge mode at will"
+	default y
+	help
+	  A simple sysfs interface to force adapters that
+	  are detected as USB to charge as AC.
+
 endif
 
 ### [LGE_BSP_S] jihyun2.jang@lge.com, 20130212 - RT8966A miniABB regulator
