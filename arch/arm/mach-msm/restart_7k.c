@@ -156,6 +156,8 @@ static int msm_reboot_call
 			restart_reason = 0x77665500;
 		} else if (!strncmp(cmd, "recovery", 8)) {
 			restart_reason = 0x77665502;
+		} else if (!strncmp(cmd, "adbrecovery", 11)) {
+			restart_reason = 0x77665511;
 		} else if (!strncmp(cmd, "eraseflash", 10)) {
 			restart_reason = 0x776655EF;
 		} else if (!strncmp(cmd, "oem-", 4)) {
