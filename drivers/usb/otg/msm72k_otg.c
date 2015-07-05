@@ -32,6 +32,11 @@
 #include <mach/clk.h>
 #include <mach/msm_xo.h>
 
+#ifdef CONFIG_FORCE_FAST_CHARGE
+#include <linux/fastchg.h>
+#define USB_FASTCHG_LOAD 1000 /* uA */
+#endif
+
 #define MSM_USB_BASE	(dev->regs)
 #define USB_LINK_RESET_TIMEOUT	(msecs_to_jiffies(10))
 #define DRIVER_NAME	"msm_otg"
@@ -538,6 +543,15 @@ static int msm_otg_set_power(struct usb_phy *xceiv, unsigned mA)
 
 	if (dev->curr_power == charge)
 		return 0;
+
+#ifdef CONFIG_FORCE_FAST_CHARGE
+	if (force_fast_charge == 1) {
+			mA = USB_FASTCHG_LOAD;
+			pr_info("USB fast charging is ON - 1000mA.\n");
+	} else {
+		pr_info("USB fast charging is OFF.\n");
+	}
+#endif
 
 	pr_debug("Charging with %dmA current\n", charge);
 	/* Call vbus_draw only if the charger is of known type and also
