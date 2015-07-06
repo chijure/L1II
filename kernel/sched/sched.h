@@ -368,10 +368,6 @@ struct rq {
 	unsigned int ave_nr_running;
 	seqcount_t ave_seqcnt;
 
-	/* time-based average load */
-	u64 nr_last_stamp;
-	unsigned int ave_nr_running;
-
 	/* capture load from *all* tasks on this cpu: */
 	struct load_weight load;
 	unsigned long nr_load_updates;
