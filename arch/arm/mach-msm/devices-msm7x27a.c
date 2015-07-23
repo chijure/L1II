@@ -895,37 +895,36 @@ static struct resource kgsl_3d0_resources[] = {
 };
 
 static struct kgsl_device_platform_data kgsl_3d0_pdata = {
-	.pwrlevel = {
-		/*                                  
-                            */
-		{
-			.gpu_freq = 320000000,
-			.bus_freq = 200000000,
-		},
-		/*                                   */
-		{
-			.gpu_freq = 245760000,
-			.bus_freq = 200000000,
-		},
-		{
-			.gpu_freq = 192000000,
-			.bus_freq = 160000000,
-		},
-		{
-			.gpu_freq = 133330000,
-			.bus_freq = 0,
-		},
-	},
-	.init_level = 0,
-	/*                                  
-                            */
-	.num_levels = 4,
-	/*                                   */
-	.set_grp_async = set_grp_xbar_async,
-	.idle_timeout = HZ,
-	.strtstp_sleepwake = true,
-	.nap_allowed = false,
-	.clk_map = KGSL_CLK_CORE | KGSL_CLK_IFACE | KGSL_CLK_MEM,
+                .pwrlevel = {
+                        /* JLO - NANHU GPU OC */
+                        {
+                                .gpu_freq = 355760000,
+                                .bus_freq = 213760000,
+                        },
+                        {
+                                .gpu_freq = 320000000,
+                                .bus_freq = 200000000,
+                        },
+                        {
+                                .gpu_freq = 245760000,
+                                .bus_freq = 200000000,
+                        },
+                        {
+                        .gpu_freq = 192000000,
+                        .bus_freq = 160000000,
+               	 	},
+                	{
+                        .gpu_freq = 153000000,
+                        .bus_freq = 0,
+                        },
+                },
+                .init_level = 0,
+                .num_levels = 5,
+                .set_grp_async = set_grp_xbar_async,
+                .idle_timeout = HZ,
+                .strtstp_sleepwake = true,
+                .nap_allowed = false,
+        .clk_map = KGSL_CLK_CORE | KGSL_CLK_IFACE | KGSL_CLK_MEM,
 };
 
 struct platform_device msm_kgsl_3d0 = {
@@ -942,7 +941,7 @@ void __init msm7x25a_kgsl_3d0_init(void)
 {
 	if (cpu_is_msm7x25a() || cpu_is_msm7x25aa() || cpu_is_msm7x25ab()) {
 		kgsl_3d0_pdata.num_levels = 2;
-		kgsl_3d0_pdata.pwrlevel[0].gpu_freq = 133330000;
+                kgsl_3d0_pdata.pwrlevel[0].gpu_freq = 190000000;
 		kgsl_3d0_pdata.pwrlevel[0].bus_freq = 160000000;
 		kgsl_3d0_pdata.pwrlevel[1].gpu_freq = 96000000;
 		kgsl_3d0_pdata.pwrlevel[1].bus_freq = 0;
