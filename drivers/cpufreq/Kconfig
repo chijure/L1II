@@ -97,6 +97,12 @@ config CPU_FREQ_DEFAULT_GOV_ONDEMANDX
 	  driver. Fallback governor will be the performance governor.
 	  OndemandX has built in sleep profile, but not working Sysfs
 	  interface.
+	  
+config CPU_FREQ_DEFAULT_GOV_PEGASUSQ
+	bool "pegasusq"
+	select CPU_FREQ_GOV_PEGASUSQ
+	help
+	  Use the CPUFreq governor 'pegasusq' as default.
 
 config CPU_FREQ_DEFAULT_GOV_ONDEMAND
 	bool "ondemand"
@@ -178,6 +184,9 @@ config CPU_FREQ_GOV_ONDEMANDX
 	  For details, take a look at linux/Documentation/cpu-freq.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_PEGASUSQ
+	tristate "'pegasusq' cpufreq policy governor"
 
 config CPU_FREQ_GOV_USERSPACE
 	tristate "'userspace' governor for userspace frequency scaling"
