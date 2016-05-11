@@ -1569,7 +1569,7 @@ config MSM_CPU_FREQ_MIN
 	default 245760
 
 config MSM7X27A_OVERCLOCK
-	bool "Enable SoC overclocking for MSM7x27A"
+	bool "Enable SoC CPU OverClocking for MSM7x27A"
 	depends on MSM_CPU_FREQ_SET_MIN_MAX
         depends on ARCH_MSM7X27A
 	default n
@@ -1582,6 +1582,21 @@ config MSM7X27A_UNDERVOLT
  	default n
  	help
 	  Enable support for non-standard msm7x27A acpuclock voltages.
+
+config MSM7X27A_CRAZYOVERCLOCK
+	bool "Enable Crazy SoC CPU OverClocking for MSM7x27A"
+	depends on MSM7X27A_OVERCLOCK
+	depends on ARCH_MSM7X27A
+	default n
+	help
+	  Enable support for a only one crazy and non-standard msm7x27A acpuclock frequencies.
+
+config MSM7X27A_GPU_OVERCLOCK
+	bool "Enable SoC GPU OverClocking for MSM7x27A"
+	depends on ARCH_MSM7X27A
+	default n
+	help
+	  Enable support for non-standard msm7x27A gpu frequencies.
 
 endif # CPU_FREQ_MSM
 
