@@ -32,21 +32,49 @@
 #define PM_LIBVERS      0x10001
 #endif
 
-#define HTC_PROCEDURE_SET_VIB_ON_OFF	22
+#define HTC_PROCEDURE_SET_VIB_ON_OFF	21
 
-#define PMIC_VIBRATOR_LEVEL_MAX  3100
-#define PMIC_VIBRATOR_LEVEL_MIN  1100
+#if defined(CONFIG_MACH_MSM7X25A_V1) //2013-04-02 HW team requested voltage down 3.0V -> 2.8V for V1
+/*                                                                                                                                                 */
+//static int voltage_level = 2800;
+static int voltage_level = 2600;
+/*                                                                                                                                                 */
+#else
+static int voltage_level = 3000;
+//#else
+//#define PMIC_VIBRATOR_LEVEL	(3000)
+#endif
 
 static struct work_struct work_vibrator_on;
 static struct work_struct work_vibrator_off;
 static struct hrtimer vibe_timer;
 
-/* default value for vibration intensity, 95% = 3000 in PMIC_VIBRATOR_LEVEL */
-static unsigned long pwmval = 95;
-
+#ifdef CONFIG_PM8XXX_RPC_VIBRATOR
 static void set_pmic_vibrator(int on)
 {
-	int pwm_duty;
+	int rc;
+
+	rc = pmic_vib_mot_set_mode(PM_VIB_MOT_MODE__MANUAL);
+	if (rc) {
+		pr_err("%s: Vibrator set mode failed", __func__);
+		return;
+	}
+
+	if (on)
+		#if 1
+		rc = pmic_vib_mot_set_volt(voltage_level);
+		#else
+		rc = pmic_vib_mot_set_volt(PMIC_VIBRATOR_LEVEL);
+		#endif
+	else
+		rc = pmic_vib_mot_set_volt(0);
+
+	if (rc)
+		pr_err("%s: Vibrator set voltage level failed", __func__);
+}
+#else
+static void set_pmic_vibrator(int on)
+{
 	static struct msm_rpc_endpoint *vib_endpoint;
 	struct set_vib_on_off_req {
 		struct rpc_request_hdr hdr;
@@ -63,25 +91,15 @@ static void set_pmic_vibrator(int on)
 	}
 
 
-	/* make sure pwmval is between 0 and 100 */
-	if (pwmval > 100) {
-		pwmval = 100;
-	} else if (pwmval < 0) {
-		pwmval = 0;
-	}
-
-	/* calculate vibration level */
-	pwm_duty = (PMIC_VIBRATOR_LEVEL_MIN +
-	(pwmval * (PMIC_VIBRATOR_LEVEL_MAX - PMIC_VIBRATOR_LEVEL_MIN) / 100));
-
 	if (on)
-		req.data = cpu_to_be32(pwm_duty);
+		req.data = cpu_to_be32(PMIC_VIBRATOR_LEVEL);
 	else
 		req.data = cpu_to_be32(0);
 
 	msm_rpc_call(vib_endpoint, HTC_PROCEDURE_SET_VIB_ON_OFF, &req,
 		sizeof(req), 5 * HZ);
 }
+#endif
 
 static void pmic_vibrator_on(struct work_struct *work)
 {
@@ -92,6 +110,14 @@ static void pmic_vibrator_off(struct work_struct *work)
 {
 	set_pmic_vibrator(0);
 }
+
+#if 1
+#else
+static void timed_vibrator_on(struct timed_output_dev *sdev)
+{
+	schedule_work(&work_vibrator_on);
+}
+#endif
 
 static void timed_vibrator_off(struct timed_output_dev *sdev)
 {
@@ -130,60 +156,32 @@ static int vibrator_get_time(struct timed_output_dev *dev)
 	return 0;
 }
 
+
+static void vibrator_set_voltage(struct timed_output_dev *dev, int value)
+{
+		voltage_level = value;
+}
+
+
+static int vibrator_get_voltage(struct timed_output_dev *dev)
+{
+	return voltage_level;
+}
+
+
+
 static enum hrtimer_restart vibrator_timer_func(struct hrtimer *timer)
 {
 	timed_vibrator_off(NULL);
 	return HRTIMER_NORESTART;
 }
 
-static ssize_t pwmvalue_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	int count;
-
-	count = sprintf(buf, "%lu\n", pwmval);
-	pr_info("vibrator: pwmval: %lu\n", pwmval);
-
-	return count;
-}
-
-ssize_t pwmvalue_store(struct device *dev,
-		struct device_attribute *attr,
-		const char *buf, size_t size)
-{
-	if (sscanf(buf, "%lu", &pwmval) != 1)
-		pr_err("vibrator: error in storing pwm value\n");
-
-	pr_info("vibrator: pwmval: %lu\n", pwmval);
-
-	return size;
-}
-
-static DEVICE_ATTR(pwmvalue, S_IRUGO | S_IWUGO,
-		pwmvalue_show, pwmvalue_store);
-
-static int blade_create_vibrator_sysfs(void)
-{
-	int ret;
-	struct kobject *vibrator_kobj;
-	vibrator_kobj = kobject_create_and_add("vibrator", NULL);
-	if (unlikely(!vibrator_kobj))
-	return -ENOMEM;
-
-	ret = sysfs_create_file(vibrator_kobj,
-			&dev_attr_pwmvalue.attr);
-	if (unlikely(ret < 0)) {
-		pr_err("vibrator: sysfs_create_file failed: %d\n", ret);
-		return ret;
-	}
-
-	return 0;
-}
-
 static struct timed_output_dev pmic_vibrator = {
 	.name = "vibrator",
 	.get_time = vibrator_get_time,
 	.enable = vibrator_enable,
+	.voltage = vibrator_set_voltage,
+	.get_voltage = vibrator_get_voltage,
 };
 
 void __init msm_init_pmic_vibrator(void)
@@ -193,8 +191,6 @@ void __init msm_init_pmic_vibrator(void)
 
 	hrtimer_init(&vibe_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	vibe_timer.function = vibrator_timer_func;
-
-	blade_create_vibrator_sysfs();
 
 	timed_output_dev_register(&pmic_vibrator);
 }
